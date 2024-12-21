@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #8e44ad, #3498db);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            margin-top: 20px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #f1c40f;
+        }
+        input[type="text"], input[type="number"] {
+            width: 90%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+        }
+        button {
+            width: 90%;
+            padding: 15px;
+            margin: 15px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:first-of-type {
+            background: #1abc9c;
+            color: #fff;
+        }
+        button:first-of-type:hover {
+            background: #16a085;
+        }
+        button:last-of-type {
+            background: #e74c3c;
+            color: #fff;
+        }
+        button:last-of-type:hover {
+            background: #c0392b;
+        }
+        .images-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .image-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 10px;
+            width: 200px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            color: #333;
+            cursor: pointer;
+        }
+        .image-card img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 15px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Image Generator</h1>
+        <input id="promptInput" type="text" placeholder="Enter your prompt here" />
+        <input id="imageCountInput" type="number" min="1" max="10" placeholder="Number of images (1-10)" />
+        <button onclick="generateImages()">Generate Images</button>
+        <div id="loadingSpinner" style="display:none;">Generating images...</div>
+        <div class="images-container" id="imagesContainer"></div>
+    </div>
+    <div class="toast" id="toast">Press Back Again to Exit</div>
+    <footer>
+    © 2024 AI Image Generator | Built with ❤️ by 
+    <a href="https://wa.me/8801797850421" target="_blank" style="color: #f1c40f; text-decoration: none;">
+        Sayedur104
+    </a>
+</footer>
+
+    <!-- Modal for viewing full-size images -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="modal-close" onclick="closeModal()">×</span>
+        <img id="modalImage" src="" alt="Full-size image">
+    </div>
+
+    <script>
+        let backPressedOnce = false;
+
+        function generateImages() {
+            const prompt = document.getElementById("promptInput").value.trim();
+            const count = parseInt(document.getElementById("imageCountInput").value, 10);
+            const container = document.getElementById("imagesContainer");
+            const spinner = document.getElementById("loadingSpinner");
+
+            if (!prompt) {
+                alert("Please enter a prompt.");
+                return;
+            }
+            if (!count || count < 1 || count > 10) {
+                alert("Please enter a valid number of images (1-10).");
+                return;
+            }
+
+            container.innerHTML = ""; // Clear previous images
+            spinner.style.display = "block"; // Show loading spinner
+
+            for (let i = 0; i < count; i++) {
+                const imageUrl = `https://img.hazex.workers.dev/?prompt=${encodeURIComponent(prompt)}&improve=true&format=square&random=${Math.random()}`;
+                
+                const card = document.createElement("div");
+                card.className = "image-card";
+                card.onclick = () => openModal(imageUrl);
+
+                const img = document.createElement("img");
+                img.src = imageUrl;
+                img.alt = `Generated image ${i + 1}`;
+                img.onload = () => spinner.style.display = "none";
+
+                container.appendChild(card);
+                card.appendChild(img);
+            }
+        }
+
+        function openModal(imageUrl) {
+            const modal = document.getElementById("imageModal");
+            const modalImage = document.getElementById("modalImage");
+            modalImage.src = imageUrl;
+            modal.style.display = "flex";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("imageModal");
+            modal.style.display = "none";
+        }
+
+        // Back button handling
+        window.onload = () => {
+            history.pushState(null, null, location.href); // Prevent default back
+        };
+
+        window.onpopstate = (event) => {
+            const toast = document.getElementById("toast");
+            if (backPressedOnce) {
+                window.history.go(-2);
+            } else {
+                backPressedOnce = true;
+                toast.style.display = "block";
+                setTimeout(() => {
+                    toast.style.display = "none";
+                    backPressedOnce = false;
+                }, 2000);
+                history.pushState(null, null, location.href); // Prevent exit
+            }
+        };
+    </script>
+</body>
+</html>
